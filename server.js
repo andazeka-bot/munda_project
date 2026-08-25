@@ -91,7 +91,7 @@ app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 
 // ---------- pages ----------
 
-const pages = ['technology', 'company', 'sales', 'career', 'contact'];
+const pages = ['technology', 'company', 'sales', 'career', 'contact', 'game'];
 for (const page of pages) {
   app.get(`/${page}`, (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, `${page}.html`));

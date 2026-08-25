@@ -175,6 +175,12 @@ h3 { font-size: 1.22rem; margin-bottom: 8px; }
 .btn-ghost { border-color: var(--border-bright); color: var(--text); background: rgba(255,255,255,0.03); }
 .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 8px 28px -10px var(--cyan-glow); }
 
+.btn-play {
+  border-color: rgba(84, 214, 230, 0.55); color: var(--cyan); background: rgba(84, 214, 230, 0.08);
+  box-shadow: 0 8px 28px -10px var(--cyan-glow);
+}
+.btn-play:hover { border-color: var(--cyan); background: rgba(84, 214, 230, 0.14); box-shadow: 0 10px 32px -8px var(--cyan-glow); }
+
 .hero-visual { position: relative; }
 .hero-visual svg { width: 100%; height: auto; }
 
