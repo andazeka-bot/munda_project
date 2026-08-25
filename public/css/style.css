@@ -5,16 +5,16 @@
 
 :root {
   /* palette */
-  --bg: #070a10;
-  --bg-soft: #0c1119;
-  --bg-card: #101722;
-  --bg-card-2: #141d2b;
-  --border: #1f2a3a;
-  --border-bright: #2c3b52;
+  --bg: #0a0e16;
+  --bg-soft: #0d121c;
+  --bg-card: #111825;
+  --bg-card-2: #151e2d;
+  --border: #202b3d;
+  --border-bright: #2e3f58;
 
-  --text: #e8edf4;
-  --text-dim: #9aa8bb;
-  --text-faint: #64748b;
+  --text: #e9eef6;
+  --text-dim: #a6b3c6;
+  --text-faint: #6b7a90;
 
   --amber: #ffb454;
   --amber-soft: #ffd9a0;
@@ -41,7 +41,11 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font);
-  background: var(--bg);
+  background:
+    radial-gradient(1100px 520px at 88% -8%, rgba(255, 180, 84, 0.055), transparent 60%),
+    radial-gradient(900px 640px at -5% 102%, rgba(84, 214, 230, 0.045), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
@@ -128,6 +132,21 @@ h3 { font-size: 1.22rem; margin-bottom: 8px; }
   overflow: hidden;
 }
 
+/* hero with real car photography (Audi A3 — first production vehicle with MUNDA textile lighting) */
+.hero-home {
+  background-image:
+    linear-gradient(90deg, rgba(8, 11, 18, 0.96) 0%, rgba(8, 11, 18, 0.84) 38%, rgba(8, 11, 18, 0.42) 72%, rgba(8, 11, 18, 0.64) 100%),
+    url('/img/hero-audi.jpg');
+  background-size: cover;
+  background-position: center 32%;
+}
+.hero-home::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0; height: 140px;
+  background: linear-gradient(180deg, transparent, var(--bg));
+  pointer-events: none;
+}
+
 .hero .container { position: relative; z-index: 2; }
 
 .hero-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: center; }
@@ -174,6 +193,7 @@ h3 { font-size: 1.22rem; margin-bottom: 8px; }
 .scroll-hint {
   position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
   color: var(--text-faint); font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase;
+  z-index: 3;
   animation: bob 2.4s ease-in-out infinite;
 }
 @keyframes bob { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 7px); } }
@@ -226,8 +246,9 @@ h3 { font-size: 1.22rem; margin-bottom: 8px; }
 .spotlight-media {
   border: 1px solid var(--border); border-radius: var(--radius);
   background: radial-gradient(500px 300px at 50% 0%, rgba(255,180,84,0.10), transparent 70%), var(--bg-card);
-  padding: 22px; overflow: hidden;
+  padding: 10px; overflow: hidden;
 }
+.spotlight-media img { width: 100%; height: auto; border-radius: 9px; }
 .spotlight-media svg { width: 100%; height: auto; }
 
 .spotlight-body h2 { margin-bottom: 18px; }
