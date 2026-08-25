@@ -127,20 +127,16 @@ h3 { font-size: 1.22rem; margin-bottom: 8px; }
 .hero {
   position: relative;
   padding: 110px 0 90px;
-  background: var(--grad-hero), var(--bg);
-  border-bottom: 1px solid var(--border);
-  overflow: hidden;
-}
-
-/* hero with real car photography (Audi A3 — first production vehicle with MUNDA textile lighting) */
-.hero-home {
-  background-image:
+  /* Audi A3 — first production vehicle with MUNDA textile lighting */
+  background:
     linear-gradient(90deg, rgba(8, 11, 18, 0.96) 0%, rgba(8, 11, 18, 0.84) 38%, rgba(8, 11, 18, 0.42) 72%, rgba(8, 11, 18, 0.64) 100%),
     url('/img/hero-audi.jpg');
   background-size: cover;
   background-position: center 32%;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
 }
-.hero-home::after {
+.hero::after {
   content: "";
   position: absolute; left: 0; right: 0; bottom: 0; height: 140px;
   background: linear-gradient(180deg, transparent, var(--bg));
