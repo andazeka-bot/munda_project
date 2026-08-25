@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="MUNDA logo">
+  <defs>
+    <linearGradient id="lg-thread" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd9a0"/>
+      <stop offset="0.5" stop-color="#ffb454"/>
+      <stop offset="1" stop-color="#f08c2e"/>
+    </linearGradient>
+    <filter id="lg-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="3" y="3" width="58" height="58" rx="14" fill="#101722" stroke="#2c3b52" stroke-width="1.5"/>
+  <!-- warp threads (vertical) -->
+  <g stroke="#3d4c63" stroke-width="3.4" stroke-linecap="round" opacity="0.85">
+    <line x1="18" y1="14" x2="18" y2="50"/>
+    <line x1="32" y1="14" x2="32" y2="50"/>
+    <line x1="46" y1="14" x2="46" y2="50"/>
+  </g>
+  <!-- glowing weft thread (woven, horizontal) -->
+  <g stroke="url(#lg-thread)" stroke-width="4.6" stroke-linecap="round" filter="url(#lg-glow)">
+    <path d="M13 26 H24 M28 26 H36 M40 26 H51" />
+    <path d="M13 38 H21 M25 38 H39 M43 38 H51" />
+  </g>
+  <!-- light scatter dots -->
+  <g fill="#ffd9a0" filter="url(#lg-glow)">
+    <circle cx="18" cy="26" r="2.2"/>
+    <circle cx="32" cy="38" r="2.2"/>
+    <circle cx="46" cy="26" r="2.2"/>
+  </g>
+</svg>

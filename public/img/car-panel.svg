@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 300" role="img" aria-label="Car door panel with integrated textile lighting">
+  <defs>
+    <linearGradient id="cp-amber" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd9a0"/><stop offset="1" stop-color="#f08c2e"/>
+    </linearGradient>
+    <filter id="cp-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="cp-halo" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+
+  <rect x="6" y="6" width="548" height="288" rx="22" fill="#0b1018" stroke="#1f2a3a" stroke-width="1.5"/>
+
+  <!-- door panel silhouette -->
+  <path d="M70 40 C90 22 150 16 210 20 C330 28 470 24 510 34 L516 60 C516 150 512 210 508 244 C470 258 380 266 300 266 C210 266 110 262 80 250 C68 244 62 210 60 160 Z"
+        fill="#101722" stroke="#2c3b52" stroke-width="1.6"/>
+
+  <!-- armrest -->
+  <path d="M90 176 C120 160 190 152 250 156 C270 157 272 172 252 176 C190 186 120 192 92 192 Z"
+        fill="#161f2e" stroke="#2c3b52" stroke-width="1.2"/>
+
+  <!-- door handle -->
+  <path d="M330 96 C350 90 380 88 398 92 L398 104 C380 100 352 102 332 108 Z"
+        fill="#1c2838" stroke="#3d4c63" stroke-width="1.4"/>
+
+  <!-- speaker grille dots -->
+  <g fill="#223048">
+    <circle cx="380" cy="180" r="3"/><circle cx="396" cy="180" r="3"/><circle cx="412" cy="180" r="3"/>
+    <circle cx="388" cy="194" r="3"/><circle cx="404" cy="194" r="3"/><circle cx="420" cy="194" r="3"/>
+    <circle cx="396" cy="208" r="3"/>
+  </g>
+
+  <!-- the MUNDA textile light strip (free-form, crash-zone safe) -->
+  <path d="M96 96 C140 84 190 112 232 100 C282 86 330 110 372 98 C420 84 468 104 492 94"
+        stroke="url(#cp-amber)" stroke-width="7" fill="none" stroke-linecap="round" filter="url(#cp-glow)"/>
+  <path d="M96 96 C140 84 190 112 232 100 C282 86 330 110 372 98 C420 84 468 104 492 94"
+        stroke="url(#cp-amber)" stroke-width="16" fill="none" stroke-linecap="round" filter="url(#cp-halo)" opacity="0.35"/>
+
+  <!-- ambient lower strip -->
+  <path d="M110 220 C170 208 230 226 290 216 C350 206 410 222 470 212"
+        stroke="#54d6e6" stroke-width="4.5" fill="none" stroke-linecap="round" filter="url(#cp-glow)" opacity="0.85"/>
+
+  <!-- labels -->
+  <g font-family="Consolas, monospace" font-size="11" letter-spacing="1">
+    <text x="30" y="32" fill="#9aa8bb">AUDI A3 FACELIFT 2024 — DOOR PANEL</text>
+    <text x="30" y="48" fill="#64748b">first series-production vehicle with MUNDA textile lighting</text>
+    <text x="150" y="70" fill="#ffb454">textile light guide &lt; 5 mm · free-form · crash-safe</text>
+  </g>
+</svg>

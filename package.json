@@ -1,0 +1,19 @@
+{
+  "name": "munda-project",
+  "version": "1.0.0",
+  "description": "Corporate website for MUNDA Textile Lichtsysteme GmbH — textile lighting systems. Node.js + Express, no Python.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

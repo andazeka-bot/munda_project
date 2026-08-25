@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+
+# runtime data (contact form submissions)
+data/
+!data/.gitkeep
+
+# logs & env
+*.log
+.env
+.env.local
+
+# OS junk
+.DS_Store
+Thumbs.db

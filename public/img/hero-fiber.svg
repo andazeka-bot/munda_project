@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 430" role="img" aria-label="Textile light guide — glowing fibres">
+  <defs>
+    <linearGradient id="hf-amber" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd9a0"/><stop offset="1" stop-color="#f08c2e"/>
+    </linearGradient>
+    <linearGradient id="hf-cyan" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9beef7"/><stop offset="1" stop-color="#2ba8c9"/>
+    </linearGradient>
+    <filter id="hf-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="hf-halo" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+  </defs>
+
+  <!-- panel -->
+  <rect x="6" y="6" width="508" height="418" rx="24" fill="#0b1018" stroke="#1f2a3a" stroke-width="1.5"/>
+
+  <!-- woven grid backdrop -->
+  <g stroke="#16202e" stroke-width="1" opacity="0.7">
+    <path d="M0 60 H520 M0 110 H520 M0 160 H520 M0 210 H520 M0 260 H520 M0 310 H520 M0 360 H520"/>
+    <path d="M60 0 V430 M120 0 V430 M180 0 V430 M240 0 V430 M300 0 V430 M360 0 V430 M420 0 V430 M480 0 V430"/>
+  </g>
+
+  <!-- weaving fibres: horizontal amber threads -->
+  <g stroke="url(#hf-amber)" stroke-width="2.6" opacity="0.9">
+    <path d="M20 95 C90 80 150 130 210 118 C270 106 300 70 360 84 C410 95 470 70 505 80"/>
+    <path d="M20 185 C110 170 140 215 220 202 C300 190 340 160 400 174 C445 184 480 160 505 168"/>
+    <path d="M20 275 C80 262 160 300 230 288 C310 274 350 250 410 262 C455 270 485 252 505 258"/>
+    <path d="M20 360 C100 348 150 385 240 372 C320 360 370 338 420 350 C460 358 485 342 505 347"/>
+  </g>
+
+  <!-- vertical warp threads (dim) -->
+  <g stroke="#27374d" stroke-width="1.4" opacity="0.8">
+    <path d="M90 60 C100 160 92 300 104 400"/>
+    <path d="M170 60 C160 170 178 290 166 400"/>
+    <path d="M260 60 C272 180 258 310 270 400"/>
+    <path d="M350 60 C338 170 356 290 344 400"/>
+    <path d="M440 60 C452 160 440 300 448 400"/>
+  </g>
+
+  <!-- light scatter points (activated emission) -->
+  <g fill="#ffd9a0" filter="url(#hf-glow)">
+    <circle cx="90" cy="95" r="4"/><circle cx="170" cy="118" r="4"/><circle cx="260" cy="202" r="4"/>
+    <circle cx="350" cy="174" r="4"/><circle cx="440" cy="262" r="4"/><circle cx="260" cy="288" r="4"/>
+  </g>
+  <g fill="#ffb454" filter="url(#hf-halo)" opacity="0.5">
+    <circle cx="90" cy="95" r="7"/><circle cx="170" cy="118" r="7"/><circle cx="260" cy="202" r="7"/>
+    <circle cx="350" cy="174" r="7"/><circle cx="440" cy="262" r="7"/><circle cx="260" cy="288" r="7"/>
+  </g>
+
+  <!-- LED module -->
+  <g>
+    <rect x="34" y="330" width="120" height="52" rx="12" fill="#141d2b" stroke="#2c3b52" stroke-width="1.5"/>
+    <rect x="52" y="344" width="18" height="24" rx="4" fill="#ffd9a0" filter="url(#hf-glow)"/>
+    <path d="M70 356 H130" stroke="#3d4c63" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="142" cy="356" r="7" fill="none" stroke="url(#hf-amber)" stroke-width="2.6" filter="url(#hf-glow)"/>
+  </g>
+  <path d="M149 356 C180 356 200 360 220 360" stroke="url(#hf-amber)" stroke-width="2.6" fill="none" filter="url(#hf-glow)"/>
+
+  <!-- labels -->
+  <g font-family="Consolas, monospace" font-size="12" letter-spacing="1">
+    <text x="42" y="52" fill="#9aa8bb">TEXTILE LIGHT MAT</text>
+    <text x="42" y="70" fill="#64748b">PMMA optical fibres · woven</text>
+    <text x="42" y="412" fill="#64748b">LED MODULE → ferrule → light-guiding fabric</text>
+  </g>
+</svg>
