@@ -34,6 +34,7 @@ npm start          # → http://localhost:3000
 | `/company`       | The AUNDE × MENTOR joint venture           |
 | `/sales`         | Sales contacts (AUNDE / MENTOR)            |
 | `/career`        | Jobs & application info                    |
+| `/game`          | **"Weave the Light"** puzzle game — route light through the textile light guide (5 levels, RGB mechanics) |
 | `/contact`       | Contact form (wired to the API)            |
 | `/api/health`    | Health check                               |
 | `/api/contact`   | `POST` a contact message (validated, stored to JSON) |
@@ -65,3 +66,9 @@ curl -X POST http://localhost:3000/api/contact \
 
 - `GET /api/messages` — list stored submissions
 - `GET /api/health` — uptime + status
+
+## Tests
+
+```bash
+npm test   # game logic: board generation, solvability, light propagation, colours
+```

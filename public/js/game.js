@@ -173,17 +173,31 @@
     for (const t of level.targets) cells[t.r * W + t.c] = { kind: 'target', open: ALL, rot: 0, fixed: true, color: t.color };
 
     const used = []; // path tile coords
-    const occupied = level.sources.slice(); // never step onto other modules
 
-    // carve one path per target, from its nearest source
-    for (const t of level.targets) {
-      const src = level.sources
-        .filter((s) => s.color === t.color)
-        .sort((a, b) => dist(a, t) - dist(b, t))[0];
-      if (!src) return null;
-      const occ = occupied.concat(level.targets.filter((x) => x !== t));
-      const segs = carvePath(W, H, occ, src, t, r);
-      if (!segs) return null;
+    // carve one path per target, from its nearest source. A single carve can
+    // accidentally wall the grid (making a later target unreachable), so retry
+    // the whole carving pass — a fresh random roll almost always works.
+    let segsList = null;
+    for (let attempt = 0; attempt < 20 && !segsList; attempt++) {
+      const occupied = level.sources.slice(); // never step onto other modules
+      const paths = [];
+      let ok = true;
+      for (const t of level.targets) {
+        const src = level.sources
+          .filter((s) => s.color === t.color)
+          .sort((a, b) => dist(a, t) - dist(b, t))[0];
+        if (!src) { ok = false; break; }
+        const occ = occupied.concat(level.targets.filter((x) => x !== t));
+        const segs = carvePath(W, H, occ, src, t, r);
+        if (!segs) { ok = false; break; }
+        paths.push(segs);
+        for (const s of segs) occupied.push({ r: s.r, c: s.c });
+      }
+      if (ok) segsList = paths;
+    }
+    if (!segsList) return null;
+
+    for (const segs of segsList) {
       for (const s of segs) {
         const open = [s.inDir, s.outDir];
         const rot = 1 + Math.floor(r() * 3); // always start mis-rotated
@@ -192,7 +206,6 @@
           solvedOpen: open.slice(), fromPath: true,
         };
         used.push({ r: s.r, c: s.c });
-        occupied.push({ r: s.r, c: s.c });
       }
     }
 
