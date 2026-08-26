@@ -3,6 +3,10 @@
  * Route light from the LED module(s) through the woven textile light guide
  * (rotatable fibre tiles) to the light-output points.
  *
+ * The game is a house of rooms: every room is its own lighting puzzle with its
+ * own name, description and accent colour. Light up a room's door to complete
+ * it; light every room to illuminate the whole MUNDA Light House.
+ *
  * Pure logic is exported for Node testing; the DOM renderer only boots in a browser.
  */
 (function (root, factory) {
@@ -23,30 +27,39 @@
     return open.map((d) => DIRS[(ROT_IDX[d] + k) % 4]).sort((a, b) => ROT_IDX[a] - ROT_IDX[b]);
   }
 
-  const LIGHT_COLORS = { amber: '#ffb454', cyan: '#54d6e6', green: '#5ee0a0' };
+  const LIGHT_COLORS = { amber: '#ffb454', cyan: '#54d6e6', green: '#5ee0a0', violet: '#b98cf5' };
 
-  const LEVELS = [
+  /**
+   * The MUNDA Light House — every room is its own puzzle.
+   * `accent` themes the room (banner, door, hub card); sources/targets use the
+   * four light colours. Rooms are ordered easy → hard.
+   */
+  const ROOMS = [
     {
-      name: 'First Light',
-      W: 4, H: 4,
+      slug: 'lobby', name: 'The Lobby', tagline: 'First Light',
+      desc: 'The entrance hall of the MUNDA Light House. Route the first glow from the LED module to the light-output point.',
+      accent: 'amber', W: 4, H: 4,
       sources: [{ r: 3, c: 0, color: 'amber' }],
       targets: [{ r: 0, c: 3, color: 'amber' }],
     },
     {
-      name: 'Two Outputs',
-      W: 5, H: 5,
+      slug: 'weaving-studio', name: 'The Weaving Studio', tagline: 'Two Outputs',
+      desc: 'Where the fibres are woven. Split the beam so both light-output points in the textile glow.',
+      accent: 'amber', W: 5, H: 5,
       sources: [{ r: 4, c: 0, color: 'amber' }],
       targets: [{ r: 0, c: 2, color: 'amber' }, { r: 2, c: 4, color: 'amber' }],
     },
     {
-      name: 'Dual Modules',
-      W: 6, H: 6,
+      slug: 'design-lab', name: 'The Design Lab', tagline: 'Dual Modules',
+      desc: 'Two LED modules, two output points. Every module feeds exactly one output — keep the paths apart.',
+      accent: 'amber', W: 6, H: 6,
       sources: [{ r: 4, c: 0, color: 'amber' }, { r: 0, c: 5, color: 'amber' }],
       targets: [{ r: 4, c: 5, color: 'amber' }, { r: 0, c: 0, color: 'amber' }],
     },
     {
-      name: 'RGB Mode',
-      W: 6, H: 6,
+      slug: 'colour-lab', name: 'The Colour Lab', tagline: 'RGB Mode',
+      desc: 'Coloured light arrives. Cyan and amber share the guide — each output only lights from its own colour.',
+      accent: 'cyan', W: 6, H: 6,
       sources: [{ r: 5, c: 0, color: 'amber' }, { r: 0, c: 5, color: 'cyan' }],
       targets: [
         { r: 0, c: 0, color: 'amber' },
@@ -55,8 +68,9 @@
       ],
     },
     {
-      name: 'Full Spectrum',
-      W: 7, H: 7,
+      slug: 'fibre-atelier', name: 'The Fibre Atelier', tagline: 'Full Spectrum',
+      desc: 'Three light colours, three outputs — the workshop where the full MUNDA spectrum comes together.',
+      accent: 'green', W: 7, H: 7,
       sources: [
         { r: 5, c: 0, color: 'amber' },
         { r: 0, c: 3, color: 'cyan' },
@@ -68,7 +82,78 @@
         { r: 0, c: 6, color: 'green' },
       ],
     },
+    {
+      slug: 'service-room', name: 'The Service Room', tagline: 'Four Outputs',
+      desc: 'The technical heart of the house. Two modules feed four outputs along the service wall.',
+      accent: 'amber', W: 7, H: 7,
+      sources: [{ r: 6, c: 0, color: 'amber' }, { r: 0, c: 6, color: 'cyan' }],
+      targets: [
+        { r: 0, c: 0, color: 'amber' },
+        { r: 6, c: 4, color: 'amber' },
+        { r: 0, c: 3, color: 'cyan' },
+        { r: 5, c: 6, color: 'cyan' },
+      ],
+    },
+    {
+      slug: 'greenhouse', name: 'The Greenhouse', tagline: 'Grown Green',
+      desc: 'Green light grows here. One module feeds two outputs across the glasshouse floor.',
+      accent: 'green', W: 7, H: 7,
+      sources: [{ r: 0, c: 0, color: 'green' }, { r: 6, c: 6, color: 'cyan' }],
+      targets: [
+        { r: 6, c: 0, color: 'green' },
+        { r: 3, c: 3, color: 'green' },
+        { r: 0, c: 6, color: 'cyan' },
+      ],
+    },
+    {
+      slug: 'showroom', name: 'The Showroom', tagline: 'Violet Hour',
+      desc: 'The new violet module makes its debut. Three sources, four outputs — a full wall of light.',
+      accent: 'violet', W: 8, H: 8,
+      sources: [
+        { r: 7, c: 0, color: 'violet' },
+        { r: 0, c: 7, color: 'amber' },
+        { r: 7, c: 7, color: 'cyan' },
+      ],
+      targets: [
+        { r: 0, c: 0, color: 'violet' },
+        { r: 7, c: 3, color: 'amber' },
+        { r: 0, c: 3, color: 'amber' },
+        { r: 3, c: 7, color: 'cyan' },
+      ],
+    },
+    {
+      slug: 'loft', name: 'The Loft', tagline: 'Split Spectrum',
+      desc: 'Top floor, open plan. Two modules feed four outputs along the long walls of the house.',
+      accent: 'cyan', W: 8, H: 8,
+      sources: [{ r: 7, c: 0, color: 'amber' }, { r: 0, c: 7, color: 'cyan' }],
+      targets: [
+        { r: 0, c: 0, color: 'amber' },
+        { r: 7, c: 5, color: 'amber' },
+        { r: 0, c: 4, color: 'cyan' },
+        { r: 5, c: 7, color: 'cyan' },
+      ],
+    },
+    {
+      slug: 'audi-studio', name: 'The Audi Studio', tagline: 'Grand Finale',
+      desc: 'The star of the house: a full Audi A3 door panel with all four light colours. Light every output and the door comes alive.',
+      accent: 'violet', W: 8, H: 8,
+      sources: [
+        { r: 7, c: 0, color: 'amber' },
+        { r: 0, c: 3, color: 'cyan' },
+        { r: 7, c: 6, color: 'green' },
+        { r: 0, c: 7, color: 'violet' },
+      ],
+      targets: [
+        { r: 0, c: 2, color: 'amber' },
+        { r: 7, c: 1, color: 'cyan' },
+        { r: 0, c: 6, color: 'green' },
+        { r: 7, c: 7, color: 'violet' },
+      ],
+    },
   ];
+
+  // back-compat alias
+  const LEVELS = ROOMS;
 
   function rng() { return Math.random(); }
 
@@ -175,14 +260,15 @@
     const used = []; // path tile coords
 
     // carve one path per target, from its nearest source. A single carve can
-    // accidentally wall the grid (making a later target unreachable), so retry
-    // the whole carving pass — a fresh random roll almost always works.
+    // accidentally wall the grid (making a later target unreachable), and the
+    // ORDER of carving decides which paths wall which areas — so each attempt
+    // shuffles the target order and a fresh random roll almost always works.
     let segsList = null;
-    for (let attempt = 0; attempt < 20 && !segsList; attempt++) {
+    for (let attempt = 0; attempt < 30 && !segsList; attempt++) {
       const occupied = level.sources.slice(); // never step onto other modules
       const paths = [];
       let ok = true;
-      for (const t of level.targets) {
+      for (const t of shuffle(level.targets, r)) {
         const src = level.sources
           .filter((s) => s.color === t.color)
           .sort((a, b) => dist(a, t) - dist(b, t))[0];
@@ -247,7 +333,7 @@
     for (const c of cells) if (c.fromPath) optimal += (4 - c.rot) % 4;
     if (optimal === 0) return null;
 
-    return { W, H, cells, sources: level.sources, targets: level.targets, name: level.name, optimal };
+    return { W, H, cells, sources: level.sources, targets: level.targets, name: level.name, slug: level.slug, accent: level.accent, optimal };
   }
 
   /** BFS light propagation from every source. */
@@ -295,18 +381,95 @@
     return { reached, order, targetStatus, litCount, done: litCount === targets.length };
   }
 
-  const logic = { LEVELS, generateLevel, computeLight, rotOpen, LIGHT_COLORS, tileFromOpen, dirBetween, carvePath };
+  const logic = { LEVELS, ROOMS, generateLevel, computeLight, rotOpen, LIGHT_COLORS, tileFromOpen, dirBetween, carvePath };
 
   /* ================= DOM renderer (browser only) ================= */
 
   if (typeof document !== 'undefined') {
     const $ = (sel) => document.querySelector(sel);
 
-    const state = { level: 0, board: null, moves: 0, busy: false };
+    const state = { room: 0, board: null, moves: 0, busy: false };
+
+    const STORE_KEY = 'munda-light-house-progress';
+
+    function loadProgress() {
+      try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; }
+    }
+    function saveProgress(p) {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(p)); } catch { /* private mode — ignore */ }
+    }
+    const progress = loadProgress();
+
+    function roomsLit() {
+      return ROOMS.filter((rm) => progress[rm.slug]).length;
+    }
+
+    /* ---------- hub (room map) ---------- */
+
+    function doorSVG(accent, lit) {
+      return `<svg class="card-door" viewBox="0 0 60 60" aria-hidden="true">
+        <path d="M10 6 C16 4 44 4 50 6 L53 14 C53 40 51 50 50 54 C44 56 16 56 10 54 C9 50 7 40 7 14 Z" fill="#101722" stroke="#2c3b52" stroke-width="2"/>
+        <path class="card-strip ${lit ? 'on' : ''}" d="M14 14 C24 11 36 11 46 14"/>
+      </svg>`;
+    }
+
+    function renderHub() {
+      $('#game-hub').hidden = false;
+      $('#game-room').hidden = true;
+      const map = $('#room-map');
+      map.innerHTML = '';
+      ROOMS.forEach((rm, i) => {
+        const done = progress[rm.slug];
+        const card = document.createElement('button');
+        card.className = 'room-card acc-' + rm.accent + (done ? ' done' : '');
+        card.setAttribute('aria-label', `${rm.name} — ${done ? 'lit' : 'not lit yet'}`);
+        card.innerHTML = `
+          ${doorSVG(rm.accent, !!done)}
+          <span class="room-card-num">${String(i + 1).padStart(2, '0')}</span>
+          <span class="room-card-name">${rm.name}</span>
+          <span class="room-card-tag">${rm.tagline}</span>
+          <span class="room-card-stars">${done ? '★'.repeat(progress[rm.slug].stars) + '☆'.repeat(3 - progress[rm.slug].stars) : '···'}</span>
+        `;
+        card.addEventListener('click', () => enterRoom(i));
+        map.appendChild(card);
+      });
+      const lit = roomsLit();
+      $('#hub-progress-fill').style.width = `${(lit / ROOMS.length) * 100}%`;
+      $('#hub-progress-text').textContent = lit === ROOMS.length
+        ? 'Every room is lit! 🎉'
+        : `${lit} / ${ROOMS.length} rooms lit`;
+      $('#hub-status').textContent = lit === ROOMS.length
+        ? 'The whole MUNDA Light House is glowing. Well done, lighting engineer!'
+        : 'Each door is one lighting puzzle. Light every door to illuminate the house.';
+    }
+
+    function showHub() {
+      renderHub();
+    }
+
+    /* ---------- room view ---------- */
+
+    function enterRoom(idx) {
+      state.room = idx;
+      $('#game-hub').hidden = true;
+      $('#game-room').hidden = false;
+      const rm = ROOMS[idx];
+      $('#room-title').textContent = rm.name;
+      $('#room-tag').textContent = rm.tagline;
+      $('#room-desc').textContent = rm.desc;
+      $('#room-index').textContent = `Room ${idx + 1} of ${ROOMS.length}`;
+      const banner = $('#room-banner');
+      banner.classList.remove('acc-amber', 'acc-cyan', 'acc-green', 'acc-violet');
+      banner.classList.add('acc-' + rm.accent);
+      initLevel(idx);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
     function renderGrid() {
       const grid = $('#game-grid');
       const b = state.board;
+      grid.classList.remove('acc-amber', 'acc-cyan', 'acc-green', 'acc-violet');
+      grid.classList.add('acc-' + (b.accent || 'amber'));
       grid.style.gridTemplateColumns = `repeat(${b.W}, 1fr)`;
       grid.innerHTML = '';
       for (let i = 0; i < b.cells.length; i++) {
@@ -341,7 +504,6 @@
       let segs = '';
       for (const d of open) {
         const [dr, dc] = DV[d];
-        const x1 = 30 + dc * 0, y1 = 30 + dr * 0;
         segs += `<line class="seg" x1="${30 + dc * -22}" y1="${30 + dr * -22}" x2="${30 + dc * 22}" y2="${30 + dr * 22}"/>`;
       }
       if (cell.kind === 'source') {
@@ -360,7 +522,7 @@
 
       // clear lighting
       document.querySelectorAll('.tile.lit').forEach((el) => {
-        el.classList.remove('lit', 'lit-amber', 'lit-cyan', 'lit-green');
+        el.classList.remove('lit', 'lit-amber', 'lit-cyan', 'lit-green', 'lit-violet');
       });
 
       // light surge: reveal in BFS order
@@ -390,28 +552,49 @@
 
     function complete(light) {
       const b = state.board;
+      const rm = ROOMS[state.room];
       const stars = state.moves <= b.optimal + 2 ? 3 : state.moves <= b.optimal + 5 ? 2 : 1;
+      // keep the best score for this room
+      const prev = progress[rm.slug];
+      if (!prev || stars > prev.stars || (stars === prev.stars && state.moves < prev.moves)) {
+        progress[rm.slug] = { stars, moves: state.moves, optimal: b.optimal };
+        saveProgress(progress);
+      }
       $('#game-modal-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
       $('#game-modal-moves').textContent = `${state.moves} moves · optimal ${b.optimal}`;
-      $('#game-modal-title').textContent = `Level ${state.level + 1} complete — the ${b.name === 'Full Spectrum' ? 'Audi A3 door panel is fully illuminated' : 'textile light guide is lit'}!`;
+      $('#game-modal-title').textContent = rm.slug === 'audi-studio'
+        ? 'The Audi A3 door panel is fully illuminated!'
+        : `${rm.name} is lit!`;
+      $('#game-modal-sub').textContent = roomsLit() === ROOMS.length
+        ? 'Every room in the MUNDA Light House is glowing. Great work, lighting engineer!'
+        : `${roomsLit()} of ${ROOMS.length} rooms lit so far.`;
       const door = $('#game-door');
+      door.classList.remove('acc-amber', 'acc-cyan', 'acc-green', 'acc-violet');
+      door.classList.add('acc-' + (rm.accent || 'amber'));
       door.classList.remove('lit');
       void door.offsetWidth;
       door.classList.add('lit');
       $('#game-modal').hidden = false;
-      $('#game-next').style.display = state.level < logic.LEVELS.length - 1 ? '' : 'none';
+      const isLast = state.room >= ROOMS.length - 1;
+      $('#game-next').style.display = isLast ? 'none' : '';
+      $('#game-next-label').textContent = 'Next room →';
+      if (isLast) {
+        $('#game-next-label').textContent = 'See all rooms';
+        $('#game-next').style.display = '';
+      }
     }
 
     function initLevel(idx) {
-      state.level = idx;
+      state.room = idx;
       state.moves = 0;
       state.busy = false;
-      const level = logic.LEVELS[idx];
-      $('#game-level-name').textContent = `Level ${idx + 1} · ${level.name}`;
+      const rm = ROOMS[idx];
+      $('#game-level-name').textContent = `Room ${idx + 1} · ${rm.tagline}`;
+      $('#game-optimal').textContent = '';
       $('#game-modal').hidden = true;
       let board = null;
-      for (let attempt = 0; attempt < 400 && !board; attempt++) board = logic.generateLevel(level);
-      if (!board) { $('#game-grid').innerHTML = '<p style="color:var(--text-faint)">Could not generate this level. Reload the page to retry.</p>'; return; }
+      for (let attempt = 0; attempt < 400 && !board; attempt++) board = logic.generateLevel(rm);
+      if (!board) { $('#game-grid').innerHTML = '<p style="color:var(--text-faint)">Could not generate this room. Reload the page to retry.</p>'; return; }
       state.board = board;
       $('#game-optimal').textContent = `optimal ${board.optimal}`;
       renderGrid();
@@ -420,10 +603,14 @@
 
     function boot() {
       if (!$('#game-grid')) return;
-      $('#game-reset').addEventListener('click', () => initLevel(state.level));
-      $('#game-next').addEventListener('click', () => initLevel(state.level + 1));
-      $('#game-restart').addEventListener('click', () => initLevel(state.level));
-      initLevel(0);
+      $('#room-back').addEventListener('click', showHub);
+      $('#game-reset').addEventListener('click', () => initLevel(state.room));
+      $('#game-next').addEventListener('click', () => {
+        if (state.room >= ROOMS.length - 1) showHub();
+        else enterRoom(state.room + 1);
+      });
+      $('#game-restart').addEventListener('click', () => initLevel(state.room));
+      showHub();
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

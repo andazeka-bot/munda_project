@@ -4,10 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weave the Light — MUNDA game | Textile lighting puzzle</title>
-  <meta name="description" content="Route light from the LED module through the woven textile light guide to the light-output points. A puzzle game about MUNDA's textile lighting technology.">
+  <meta name="description" content="Route light from the LED module through the woven textile light guide to the light-output points. Ten rooms, four light colours — light up the whole MUNDA Light House.">
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
   <link rel="stylesheet" href="/css/style.css">
   <style>
+    :root {
+      /* violet — the 4th light colour, game page only */
+      --violet: #b98cf5;
+      --violet-soft: #dcc6fb;
+      --violet-glow: rgba(185, 140, 245, 0.35);
+    }
+
     /* ---------- game page ---------- */
     .game-section { padding-top: 64px; }
 
@@ -21,10 +28,90 @@
     .game-hud .stat { color: var(--text-dim); font-size: 0.9rem; }
     .game-hud .stat b { color: var(--text); }
 
+    /* ---------- room map (hub) ---------- */
+    .hub-head { max-width: 640px; margin: 0 auto 26px; text-align: center; }
+    .hub-head .kicker { justify-content: center; }
+    .hub-head .kicker::before { display: none; }
+    .hub-head h2 { margin-bottom: 8px; }
+    .hub-lead { color: var(--text-dim); margin-bottom: 18px; }
+
+    .hub-progress {
+      display: flex; align-items: center; gap: 14px;
+      max-width: 480px; margin: 0 auto;
+      font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim);
+    }
+    .hub-progress-bar {
+      flex: 1; height: 8px; border-radius: 99px; overflow: hidden;
+      background: var(--bg-card); border: 1px solid var(--border);
+    }
+    .hub-progress-bar span {
+      display: block; height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--amber), var(--cyan), var(--green), var(--violet));
+      transition: width .6s ease;
+    }
+
+    .room-map {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      max-width: 900px; margin: 0 auto;
+    }
+    .room-card {
+      --acc: var(--amber);
+      position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 22px 16px 18px; cursor: pointer;
+      background: linear-gradient(180deg, var(--bg-card-2), var(--bg-card));
+      border: 1px solid var(--border); border-radius: 16px;
+      transition: border-color .18s ease, box-shadow .18s ease, transform .1s ease;
+      font: inherit; color: var(--text); text-align: center;
+    }
+    .room-card:hover { border-color: var(--acc); box-shadow: 0 0 24px -8px var(--acc); transform: translateY(-2px); }
+    .room-card:active { transform: scale(0.97); }
+    .room-card.done { border-color: var(--acc); box-shadow: 0 0 18px -8px var(--acc); }
+    .room-card.acc-amber  { --acc: var(--amber); }
+    .room-card.acc-cyan   { --acc: var(--cyan); }
+    .room-card.acc-green  { --acc: var(--green); }
+    .room-card.acc-violet { --acc: var(--violet); }
+
+    .card-door { width: 74px; height: 74px; margin-bottom: 6px; }
+    .card-strip { stroke: #2a3850; stroke-width: 4; stroke-linecap: round; fill: none; transition: stroke .4s ease, filter .4s ease; }
+    .room-card.done .card-strip { stroke: var(--acc); filter: drop-shadow(0 0 5px var(--acc)); }
+    .room-card.done .card-strip.on { animation: doorPulse 1.6s ease-in-out infinite; }
+
+    .room-card-num { font-family: var(--mono); font-size: 0.7rem; color: var(--text-faint); letter-spacing: 0.15em; }
+    .room-card-name { font-weight: 700; font-size: 1.02rem; color: var(--text); }
+    .room-card-tag { font-size: 0.82rem; color: var(--text-dim); }
+    .room-card-stars { font-size: 0.95rem; letter-spacing: 3px; color: var(--acc); min-height: 1.2em; text-shadow: 0 0 10px var(--acc); }
+
+    /* ---------- room banner ---------- */
+    .room-banner {
+      --acc: var(--amber);
+      display: flex; align-items: flex-start; gap: 18px;
+      max-width: 560px; margin: 0 auto 18px;
+      padding: 16px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border); border-left: 3px solid var(--acc);
+      border-radius: var(--radius);
+    }
+    .room-banner.acc-amber  { --acc: var(--amber); }
+    .room-banner.acc-cyan   { --acc: var(--cyan); }
+    .room-banner.acc-green  { --acc: var(--green); }
+    .room-banner.acc-violet { --acc: var(--violet); }
+    .room-banner .lvl { font-family: var(--mono); color: var(--acc); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; }
+    .room-banner h3 { font-size: 1.28rem; margin-bottom: 2px; }
+    .room-banner p { color: var(--text-dim); font-size: 0.92rem; margin: 0; }
+
     .game-grid {
       display: grid; gap: 7px;
       width: min(92vw, 560px); margin: 0 auto;
+      padding: 10px; border-radius: 14px;
+      border: 1px solid var(--border);
+      transition: border-color .3s ease, box-shadow .3s ease;
     }
+    .game-grid.acc-amber  { border-color: rgba(255, 180, 84, 0.25); }
+    .game-grid.acc-cyan   { border-color: rgba(84, 214, 230, 0.25); }
+    .game-grid.acc-green  { border-color: rgba(94, 224, 160, 0.25); }
+    .game-grid.acc-violet { border-color: rgba(185, 140, 245, 0.25); }
+
     .tile {
       aspect-ratio: 1; padding: 0; border-radius: 9px; cursor: pointer;
       background: #0f1522; border: 1px solid var(--border);
@@ -41,16 +128,19 @@
     .tile.lit-amber .seg { stroke: #ffb454; filter: drop-shadow(0 0 4px rgba(255, 180, 84, 0.75)); }
     .tile.lit-cyan .seg { stroke: #54d6e6; filter: drop-shadow(0 0 4px rgba(84, 214, 230, 0.75)); }
     .tile.lit-green .seg { stroke: #5ee0a0; filter: drop-shadow(0 0 4px rgba(94, 224, 160, 0.75)); }
+    .tile.lit-violet .seg { stroke: #b98cf5; filter: drop-shadow(0 0 4px rgba(185, 140, 245, 0.75)); }
 
     .tile .led { fill: #7a5a2e; transition: fill .25s ease, filter .25s ease; }
     .tile.lit-amber .led { fill: #ffd9a0; filter: drop-shadow(0 0 6px rgba(255, 180, 84, 0.9)); }
     .tile.lit-cyan .led { fill: #c8f6fc; filter: drop-shadow(0 0 6px rgba(84, 214, 230, 0.9)); }
     .tile.lit-green .led { fill: #d2f9e4; filter: drop-shadow(0 0 6px rgba(94, 224, 160, 0.9)); }
+    .tile.lit-violet .led { fill: #ead9fd; filter: drop-shadow(0 0 6px rgba(185, 140, 245, 0.9)); }
 
     .tile .dot { fill: #2a3850; transition: fill .25s ease, filter .25s ease; }
     .tile.lit-amber .dot { fill: #ffd9a0; filter: drop-shadow(0 0 7px rgba(255, 180, 84, 0.95)); }
     .tile.lit-cyan .dot { fill: #c8f6fc; filter: drop-shadow(0 0 7px rgba(84, 214, 230, 0.95)); }
     .tile.lit-green .dot { fill: #d2f9e4; filter: drop-shadow(0 0 7px rgba(94, 224, 160, 0.95)); }
+    .tile.lit-violet .dot { fill: #ead9fd; filter: drop-shadow(0 0 7px rgba(185, 140, 245, 0.95)); }
 
     .game-controls { display: flex; gap: 12px; justify-content: center; margin: 26px 0 10px; }
     .game-help { text-align: center; color: var(--text-faint); font-size: 0.92rem; max-width: 46ch; margin: 0 auto 30px; }
@@ -72,7 +162,8 @@
     .modal-card h2 { color: var(--amber-soft); margin-bottom: 8px; }
     .modal-card p { color: var(--text-dim); font-size: 0.95rem; }
     .modal-stars { font-size: 2rem; letter-spacing: 6px; color: var(--amber); margin: 14px 0 4px; text-shadow: 0 0 18px var(--amber-glow); }
-    .modal-moves { color: var(--text-faint); font-size: 0.85rem; font-family: var(--mono); margin-bottom: 18px; }
+    .modal-moves { color: var(--text-faint); font-size: 0.85rem; font-family: var(--mono); margin-bottom: 4px; }
+    .modal-sub { color: var(--text-faint); font-size: 0.85rem; margin-bottom: 18px; }
     .modal-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
     .door-wrap {
@@ -81,9 +172,14 @@
     }
     .door-wrap svg { width: 100%; height: auto; }
     .door-strip { stroke: #2a3850; stroke-width: 5; stroke-linecap: round; fill: none; transition: stroke .6s ease, filter .6s ease; }
-    .door-wrap.lit .door-strip { stroke: #ffb454; filter: drop-shadow(0 0 6px rgba(255, 180, 84, 0.9)); animation: doorPulse 1.6s ease-in-out infinite; }
-    .door-wrap.lit .door-strip.cyan { stroke: #54d6e6; filter: drop-shadow(0 0 6px rgba(84, 214, 230, 0.9)); }
-    .door-wrap.lit .door-strip.green { stroke: #5ee0a0; filter: drop-shadow(0 0 6px rgba(94, 224, 160, 0.9)); }
+    .door-wrap.acc-amber  { border-color: rgba(255, 180, 84, 0.35); }
+    .door-wrap.acc-cyan   { border-color: rgba(84, 214, 230, 0.35); }
+    .door-wrap.acc-green  { border-color: rgba(94, 224, 160, 0.35); }
+    .door-wrap.acc-violet { border-color: rgba(185, 140, 245, 0.35); }
+    .door-wrap.lit.acc-amber  .door-strip { stroke: #ffb454; filter: drop-shadow(0 0 6px rgba(255, 180, 84, 0.9)); animation: doorPulse 1.6s ease-in-out infinite; }
+    .door-wrap.lit.acc-cyan   .door-strip { stroke: #54d6e6; filter: drop-shadow(0 0 6px rgba(84, 214, 230, 0.9)); animation: doorPulse 1.6s ease-in-out infinite; }
+    .door-wrap.lit.acc-green  .door-strip { stroke: #5ee0a0; filter: drop-shadow(0 0 6px rgba(94, 224, 160, 0.9)); animation: doorPulse 1.6s ease-in-out infinite; }
+    .door-wrap.lit.acc-violet .door-strip { stroke: #b98cf5; filter: drop-shadow(0 0 6px rgba(185, 140, 245, 0.9)); animation: doorPulse 1.6s ease-in-out infinite; }
     @keyframes doorPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
   </style>
 </head>
@@ -114,32 +210,62 @@
   <section class="hero" style="padding: 80px 0 60px;">
     <div class="container">
       <span class="kicker">Game · textile light puzzle</span>
-      <h1>Weave the light. <span class="hl">Light up the door.</span></h1>
+      <h1>Weave the light. <span class="hl">Light up the house.</span></h1>
       <p class="lead" style="max-width: 42em;">
-        You are the lighting engineer. Rotate the fibre tiles to route light from the LED module
-        through the woven textile light guide to the light-output points — just like a real MUNDA
-        door panel. Finish all 5 levels and the Audi A3 door lights up.
+        You are the lighting engineer. The MUNDA Light House has ten rooms — each one a puzzle.
+        Rotate the fibre tiles to route light from the LED modules through the woven textile
+        light guide to the output points. Light every door and the whole house glows.
       </p>
     </div>
   </section>
 
   <section class="section game-section">
     <div class="container">
-      <div class="game-hud">
-        <span class="lvl" id="game-level-name">Level 1</span>
-        <span class="stat">Moves: <b id="game-moves">0</b> · <span id="game-optimal"></span></span>
+
+      <!-- room map (hub) -->
+      <div id="game-hub">
+        <div class="hub-head">
+          <span class="kicker">The MUNDA Light House</span>
+          <h2>Pick a room</h2>
+          <p class="lead hub-lead" id="hub-status">
+            Each door is one lighting puzzle. Light every door to illuminate the house.
+          </p>
+          <div class="hub-progress">
+            <div class="hub-progress-bar"><span id="hub-progress-fill"></span></div>
+            <span id="hub-progress-text">0 / 10 rooms lit</span>
+          </div>
+        </div>
+        <div id="room-map" class="room-map" role="list" aria-label="Rooms of the MUNDA Light House"></div>
       </div>
 
-      <div id="game-grid" class="game-grid" role="grid" aria-label="Textile light guide puzzle grid"></div>
+      <!-- a single room (puzzle) -->
+      <div id="game-room" hidden>
+        <div class="room-banner acc-amber" id="room-banner">
+          <button id="room-back" class="btn btn-ghost" style="flex-shrink: 0;">← All rooms</button>
+          <div>
+            <span class="lvl" id="room-index">Room 1 of 10</span>
+            <h3 id="room-title">The Lobby</h3>
+            <p id="room-desc"></p>
+          </div>
+        </div>
 
-      <div class="game-controls">
-        <button id="game-reset" class="btn btn-ghost">↺ New board</button>
+        <div class="game-hud">
+          <span class="lvl" id="game-level-name">Room 1</span>
+          <span class="stat">Moves: <b id="game-moves">0</b> · <span id="game-optimal"></span></span>
+        </div>
+
+        <div id="game-grid" class="game-grid" role="grid" aria-label="Textile light guide puzzle grid"></div>
+
+        <div class="game-controls">
+          <button id="game-reset" class="btn btn-ghost">↺ New board</button>
+        </div>
+        <p class="game-help">
+          Click a tile to rotate it clockwise. Light flows from the <span style="color: var(--amber);">LED modules</span>
+          along connected fibres to the <span style="color: var(--cyan);">light-output points</span>.
+          Coloured light must reach the matching output. Complete the room to light its door.
+        </p>
       </div>
-      <p class="game-help">
-        Click a tile to rotate it clockwise. Light flows from the <span style="color: var(--amber);">LED modules</span>
-        along connected fibres to the <span style="color: var(--cyan);">light-output points</span>.
-        Coloured light must reach the matching output.
-      </p>
+
     </div>
   </section>
 </main>
@@ -147,20 +273,21 @@
 <!-- completion modal -->
 <div id="game-modal" class="game-modal" hidden>
   <div class="modal-card">
-    <div class="door-wrap" id="game-door">
-      <svg viewBox="0 0 156 120" role="img" aria-label="Car door panel with textile lighting">
+    <div class="door-wrap acc-amber" id="game-door">
+      <svg viewBox="0 0 156 120" role="img" aria-label="Room door with textile lighting">
         <path d="M18 8 C34 3 88 2 128 8 L140 16 C140 60 138 96 134 108 C100 114 40 114 24 108 C16 96 14 60 18 30 Z" fill="#101722" stroke="#2c3b52" stroke-width="2"/>
         <path d="M96 22 C108 19 122 19 130 22 L132 30 C122 27 108 27 98 30 Z" fill="#1c2838" stroke="#3d4c63" stroke-width="1.4"/>
         <path class="door-strip" d="M30 30 C52 25 74 32 92 27 C108 23 122 27 132 24"/>
-        <path class="door-strip cyan" d="M32 68 C54 63 78 70 96 65 C112 61 126 65 134 62"/>
-        <path class="door-strip green" d="M34 98 C56 93 80 100 98 95 C114 91 126 94 134 91"/>
+        <path class="door-strip" d="M32 68 C54 63 78 70 96 65 C112 61 126 65 134 62"/>
+        <path class="door-strip" d="M34 98 C56 93 80 100 98 95 C114 91 126 94 134 91"/>
       </svg>
     </div>
-    <h2 id="game-modal-title">Level complete!</h2>
+    <h2 id="game-modal-title">Room complete!</h2>
     <div class="modal-stars" id="game-modal-stars">★★★</div>
     <div class="modal-moves" id="game-modal-moves"></div>
+    <div class="modal-sub" id="game-modal-sub"></div>
     <div class="modal-actions">
-      <button id="game-next" class="btn btn-primary">Next level →</button>
+      <button id="game-next" class="btn btn-primary"><span id="game-next-label">Next room →</span></button>
       <button id="game-restart" class="btn btn-ghost">Replay</button>
       <a href="/" class="btn btn-ghost">Home</a>
     </div>
@@ -192,7 +319,7 @@
         <h4>Contact</h4>
         <ul>
           <li><a href="mailto:welcome@munda.tech">welcome@munda.tech</a></li>
-          <li><a href="tel:+4921195073730">+49 211 9507373-0</a></li>
+          <li><a href="tel:+492****3730">+49 211 9507373-0</a></li>
           <li><a href="https://www.munda.tech/en/" target="_blank" rel="noopener">munda.tech ↗</a></li>
         </ul>
       </div>

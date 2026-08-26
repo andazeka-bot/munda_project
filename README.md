@@ -34,7 +34,7 @@ npm start          # → http://localhost:3000
 | `/company`       | The AUNDE × MENTOR joint venture           |
 | `/sales`         | Sales contacts (AUNDE / MENTOR)            |
 | `/career`        | Jobs & application info                    |
-| `/game`          | **"Weave the Light"** puzzle game — route light through the textile light guide (5 levels, RGB mechanics) |
+| `/game`          | **"Weave the Light"** puzzle game — the MUNDA Light House: 10 rooms, one puzzle per room, 4 light colours (amber/cyan/green/violet), room map + progress saved in the browser |
 | `/contact`       | Contact form (wired to the API)            |
 | `/api/health`    | Health check                               |
 | `/api/contact`   | `POST` a contact message (validated, stored to JSON) |

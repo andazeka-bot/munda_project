@@ -1,13 +1,15 @@
 /**
  * MUNDA game logic tests (Node, no browser needed):
- *   - every level generates solvable boards
+ *   - the Light House has 10 rooms, each with its own identity (slug, name, accent)
+ *   - every room generates solvable boards
  *   - boards are NOT solved at start (rotations actually shuffled)
  *   - restoring all path tiles to their solved rotation lights every target
  *   - optimal move count matches the shuffled rotation offsets
+ *   - violet light behaves like the other colours
  * Run: node tests/game.test.js
  */
 const assert = require('assert');
-const { LEVELS, generateLevel, computeLight, rotOpen } = require('../public/js/game.js');
+const { ROOMS, LEVELS, generateLevel, computeLight, rotOpen } = require('../public/js/game.js');
 
 let failures = 0;
 function check(cond, msg) {
@@ -15,9 +17,35 @@ function check(cond, msg) {
   else { failures++; console.error('  FAIL -', msg); }
 }
 
-for (let li = 0; li < LEVELS.length; li++) {
-  const level = LEVELS[li];
-  console.log(`\nLevel ${li + 1}: "${level.name}" (${level.W}x${level.H}, ${level.sources.length} source(s), ${level.targets.length} target(s))`);
+// 0) house structure: enough rooms, everything has its own room identity
+console.log('\nLight House structure:');
+check(ROOMS.length >= 10, `house has ${ROOMS.length} rooms (wanted >= 10)`);
+check(LEVELS === ROOMS, 'LEVELS alias points at ROOMS (back-compat)');
+{
+  const slugs = ROOMS.map((r) => r.slug);
+  check(new Set(slugs).size === slugs.length, 'every room has a unique slug');
+  const accents = ['amber', 'cyan', 'green', 'violet'];
+  let metaOk = true;
+  for (const rm of ROOMS) {
+    if (!rm.name || !rm.tagline || !rm.desc || !rm.accent) metaOk = false;
+    if (!accents.includes(rm.accent)) metaOk = false;
+    if (!Array.isArray(rm.sources) || !Array.isArray(rm.targets) || rm.sources.length === 0 || rm.targets.length === 0) metaOk = false;
+    if (rm.W < 3 || rm.H < 3 || rm.W > 8 || rm.H > 8) metaOk = false;
+    for (const s of rm.sources) {
+      if (!accents.includes(s.color)) metaOk = false;
+      if (s.r < 0 || s.r >= rm.H || s.c < 0 || s.c >= rm.W) metaOk = false;
+    }
+    for (const t of rm.targets) {
+      if (!accents.includes(t.color)) metaOk = false;
+      if (t.r < 0 || t.r >= rm.H || t.c < 0 || t.c >= rm.W) metaOk = false;
+    }
+  }
+  check(metaOk, 'every room has name/tagline/desc/accent and in-bounds sources & targets');
+}
+
+for (let li = 0; li < ROOMS.length; li++) {
+  const level = ROOMS[li];
+  console.log(`\nRoom ${li + 1}: "${level.name}" (${level.W}x${level.H}, ${level.sources.length} source(s), ${level.targets.length} target(s), accent ${level.accent})`);
 
   let generated = 0, initialSolved = 0, solveFailures = 0, optimalMismatch = 0;
   const RUNS = 200;
@@ -82,6 +110,24 @@ console.log('\nColour-matching test:');
   const light = computeLight(board);
   check(!light.done, 'amber target stays dark under cyan light');
   check(light.targetStatus[0] === false, 'targetStatus reports unlit');
+}
+
+// 6) violet colour round-trips: violet lights violet, not green
+console.log('\nViolet colour test:');
+{
+  const W = 3, H = 1;
+  const cells = new Array(3).fill(null);
+  cells[0] = { kind: 'source', open: ['N', 'E', 'S', 'W'], rot: 0, fixed: true, color: 'violet' };
+  cells[1] = { kind: 'path', open: ['E', 'W'], rot: 0, solvedOpen: ['E', 'W'], fromPath: true };
+  cells[2] = { kind: 'target', open: ['N', 'E', 'S', 'W'], rot: 0, fixed: true, color: 'violet' };
+  const board = { W, H, cells, sources: [{ r: 0, c: 0, color: 'violet' }], targets: [{ r: 0, c: 2, color: 'violet' }], optimal: 0 };
+  const light = computeLight(board);
+  check(light.done, 'violet source lights a violet target');
+
+  cells[2].open = ['N', 'E', 'S', 'W']; // target tile stays open
+  board.targets[0].color = 'green';     // the OUTPUT wants green instead
+  const wrong = computeLight(board);
+  check(!wrong.done, 'green target stays dark under violet light');
 }
 
 console.log(failures === 0 ? '\nALL TESTS PASSED' : `\n${failures} CHECK(S) FAILED`);
