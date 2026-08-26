@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Light Works — MUNDA adventure game</title>
+  <meta name="description" content="Explore the MUNDA Light Works: collect light orbs, flip switches, dodge dark zones and light up the Audi Showroom in this textile-light adventure.">
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    :root {
+      --violet: #b98cf5;
+      --violet-glow: rgba(185, 140, 245, 0.35);
+      --acc: var(--amber);
+    }
+    .acc-amber  { --acc: var(--amber); }
+    .acc-cyan   { --acc: var(--cyan); }
+    .acc-green  { --acc: var(--green); }
+    .acc-violet { --acc: var(--violet); }
+
+    .game-section { padding-top: 56px; padding-bottom: 70px; }
+
+    /* ---------- hub ---------- */
+    .hub-head { max-width: 680px; margin: 0 auto 26px; text-align: center; }
+    .hub-head .kicker { justify-content: center; }
+    .hub-head .kicker::before { display: none; }
+    .hub-head h2 { margin-bottom: 8px; }
+    .hub-lead { color: var(--text-dim); margin-bottom: 16px; }
+    .hub-meta { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .lumen-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border: 1px solid var(--border); border-radius: 99px;
+      background: var(--bg-card); font-family: var(--mono); font-size: 0.85rem; color: var(--text-dim);
+    }
+    .lumen-pill b { color: var(--amber); font-size: 1rem; }
+    .btn-icon { padding: 8px 14px; font-size: 0.85rem; }
+
+    .zone-map {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      max-width: 920px; margin: 0 auto;
+    }
+    .zone-card {
+      position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 20px 14px 16px; cursor: pointer;
+      background: linear-gradient(180deg, var(--bg-card-2), var(--bg-card));
+      border: 1px solid var(--border); border-radius: 16px;
+      transition: border-color .18s ease, box-shadow .18s ease, transform .1s ease;
+      font: inherit; color: var(--text); text-align: center;
+    }
+    .zone-card:hover:not(.locked) { border-color: var(--acc); box-shadow: 0 0 26px -8px var(--acc); transform: translateY(-2px); }
+    .zone-card:active { transform: scale(0.97); }
+    .zone-card.done { border-color: var(--acc); box-shadow: 0 0 18px -8px var(--acc); }
+    .zone-card.locked { cursor: not-allowed; opacity: 0.55; filter: grayscale(0.6); }
+    .zone-icon { width: 66px; height: 66px; margin-bottom: 6px; }
+    .zi-core { fill: #1b2637; stroke: #2c3b52; stroke-width: 3; transition: fill .4s ease, filter .4s ease; }
+    .zone-card.done .zi-core { fill: var(--acc); filter: drop-shadow(0 0 7px var(--acc)); }
+    .zone-card-num { font-family: var(--mono); font-size: 0.68rem; color: var(--text-faint); letter-spacing: 0.15em; }
+    .zone-card-name { font-weight: 700; font-size: 1rem; }
+    .zone-card-tag { font-size: 0.8rem; color: var(--text-dim); }
+    .zone-card-stars { font-size: 0.95rem; letter-spacing: 3px; color: var(--acc); min-height: 1.2em; text-shadow: 0 0 10px var(--acc); }
+    .zone-card-time { font-family: var(--mono); font-size: 0.72rem; color: var(--text-faint); }
+
+    /* ---------- zone view ---------- */
+    .zone-banner {
+      display: flex; align-items: flex-start; gap: 16px;
+      max-width: 640px; margin: 0 auto 14px;
+      padding: 14px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border); border-left: 3px solid var(--acc);
+      border-radius: var(--radius);
+    }
+    .zone-banner h3 { font-size: 1.2rem; margin-bottom: 1px; }
+    .zone-banner p { color: var(--text-dim); font-size: 0.88rem; margin: 0; }
+    .zone-banner .ztag { color: var(--acc); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 2px; }
+
+    .game-hud {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+      max-width: 640px; margin: 0 auto 12px;
+      padding: 10px 16px; border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--bg-card);
+    }
+    .game-hud .stat { color: var(--text-dim); font-size: 0.88rem; font-family: var(--mono); }
+    .game-hud .stat b { color: var(--text); }
+    .mission-line { font-size: 0.92rem; color: var(--text); font-weight: 600; }
+    .portal-status { display: inline-block; margin-top: 3px; font-size: 0.78rem; color: var(--text-faint); font-family: var(--mono); transition: color .3s ease; }
+    .portal-status.on { color: var(--acc); text-shadow: 0 0 10px var(--acc); animation: doorPulse 1.4s ease-in-out infinite; }
+
+    .board-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    #zone-board {
+      position: relative; margin: 0 auto;
+      background: #0b1019; border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      box-shadow: 0 0 40px -18px var(--acc), inset 0 0 60px rgba(0,0,0,0.5);
+    }
+    #zone-grid { display: grid; position: absolute; inset: 0; }
+    .ztile { position: relative; width: 100%; height: 100%; }
+    #zone-grid .ztile { background: rgba(255,255,255,0.012); }
+    #zone-grid .ztile.wall { background: #141b28; box-shadow: inset 0 0 0 1px #1d2637; }
+    .ztile.ov { position: absolute; pointer-events: none; display: grid; place-items: center; }
+
+    /* pickups + props */
+    .orb { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff8, transparent 45%), var(--orb-c); box-shadow: 0 0 12px var(--orb-c); animation: orbPulse 1.6s ease-in-out infinite; transition: opacity .3s ease, transform .3s ease; }
+    .orb::after { content: ""; width: 38%; height: 38%; border-radius: 50%; background: radial-gradient(circle, #fff, transparent 70%); }
+    .orb-amber { --orb-c: #ffb454; } .orb-cyan { --orb-c: #54d6e6; }
+    .orb-green { --orb-c: #5ee0a0; } .orb-violet { --orb-c: #b98cf5; }
+    .orb.taken { opacity: 0; transform: scale(1.8); }
+
+    .gate { border-radius: 4px; background: repeating-linear-gradient(135deg, var(--gate-c) 0 6px, transparent 6px 12px); opacity: 0.85; box-shadow: 0 0 14px -2px var(--gate-c); transition: opacity .4s ease; }
+    .gate-amber { --gate-c: #ffb45455; } .gate-cyan { --gate-c: #54d6e655; }
+    .gate-green { --gate-c: #5ee0a055; } .gate-violet { --gate-c: #b98cf555; }
+
+    .node { border-radius: 50%; border: 2px dashed #41526e; transition: border-color .3s ease, box-shadow .3s ease; }
+    .node::after { content: ""; width: 42%; height: 42%; border-radius: 50%; background: #1b2637; transition: background .3s ease; }
+    .node.lit { border-color: var(--acc); border-style: solid; box-shadow: 0 0 16px -2px var(--acc); }
+    .node.lit::after { background: var(--acc); box-shadow: 0 0 10px var(--acc); }
+
+    .switch { border-radius: 6px; background: #22304a; box-shadow: inset 0 0 0 2px #33456a; transition: background .3s ease, box-shadow .3s ease; }
+    .switch::after { content: ""; width: 30%; height: 30%; border-radius: 50%; background: #8fa3c4; }
+    .switch.fired { background: var(--acc); box-shadow: inset 0 0 0 2px var(--acc), 0 0 12px var(--acc); }
+    .switch.fired::after { background: #fff; }
+
+    .door { background: #2a3a54; box-shadow: inset 0 0 0 2px #3c4f70; transition: background .4s ease, box-shadow .4s ease, opacity .4s ease, transform .4s ease; }
+    .door::before, .door::after { content: ""; position: absolute; left: 50%; top: 14%; width: 12%; height: 72%; background: #101722; border-radius: 4px; }
+    .door::after { left: auto; right: 14%; }
+    .door.open { background: var(--acc); box-shadow: inset 0 0 0 2px var(--acc), 0 0 14px var(--acc); }
+    .door.gone { opacity: 0; transform: scaleY(0.3); }
+
+    .hazard { background: radial-gradient(circle, #05070c 30%, transparent 70%); box-shadow: inset 0 0 14px #000; animation: hazardFlicker 1.3s steps(2) infinite; }
+    .hazard::after { content: "☠"; color: #39435a; font-size: 0.7em; }
+
+    .tele, .tele-out { border-radius: 50%; background: radial-gradient(circle, #2c3f63 20%, transparent 70%); box-shadow: 0 0 10px #2c3f63; animation: teleSpin 3s linear infinite; }
+    .tele-out { border: 2px dashed #3d557f; animation-direction: reverse; }
+
+    .exit { border-radius: 50%; border: 2px solid #33456a; color: #41526e; font-family: var(--mono); font-size: 0.62em; transition: border-color .3s ease, color .3s ease, box-shadow .3s ease; }
+    .portal-status.on ~ * .exit, .exit.active { border-color: var(--acc); color: var(--acc); box-shadow: 0 0 16px var(--acc); animation: doorPulse 1.4s ease-in-out infinite; }
+
+    /* player */
+    .player {
+      position: absolute; z-index: 5; width: 78%; height: 78%;
+      left: 11%; top: 11%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff6, transparent 45%), var(--acc);
+      box-shadow: 0 0 14px var(--acc), 0 0 34px -6px var(--acc);
+      transition: transform .1s linear;
+      pointer-events: none;
+    }
+    .player.zapped { animation: zap .35s ease; }
+    .player.teleporting { opacity: 0; transition: opacity .18s ease; }
+
+    /* fx */
+    .spark {
+      position: absolute; width: 10px; height: 10px; border-radius: 50%;
+      background: var(--spark-c); box-shadow: 0 0 12px var(--spark-c);
+      transform: translate(-50%, -50%); animation: sparkFly .55s ease-out forwards; z-index: 8;
+    }
+    .spark-amber { --spark-c: #ffb454; } .spark-cyan { --spark-c: #54d6e6; }
+    .spark-green { --spark-c: #5ee0a0; } .spark-violet { --spark-c: #b98cf5; }
+    .burst {
+      position: absolute; width: 26px; height: 26px; border-radius: 50%;
+      border: 3px solid var(--burst-c); transform: translate(-50%, -50%);
+      animation: burstRing .6s ease-out forwards; z-index: 8;
+    }
+    .burst-amber { --burst-c: #ffb454; } .burst-cyan { --burst-c: #54d6e6; }
+    .burst-green { --burst-c: #5ee0a0; } .burst-violet { --burst-c: #b98cf5; }
+
+    /* hint */
+    .game-hint {
+      min-height: 26px; text-align: center; color: var(--acc); font-size: 0.9rem;
+      font-family: var(--mono); opacity: 0; transition: opacity .25s ease;
+    }
+    .game-hint.show { opacity: 1; }
+
+    /* controls */
+    .game-controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+    .dpad {
+      display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px);
+      gap: 6px; margin: 12px auto 0;
+    }
+    .dpad button {
+      border-radius: 12px; border: 1px solid var(--border); background: var(--bg-card);
+      color: var(--text-dim); font-size: 1.15rem; cursor: pointer;
+      transition: background .12s ease, transform .08s ease;
+    }
+    .dpad button:active { background: var(--bg-card-2); transform: scale(0.92); color: var(--acc); }
+    .dpad .dpad-none { visibility: hidden; }
+
+    /* modals */
+    .game-modal {
+      position: fixed; inset: 0; z-index: 100;
+      display: grid; place-items: center;
+      background: rgba(4, 6, 10, 0.8); backdrop-filter: blur(6px);
+    }
+    .game-modal[hidden] { display: none; }
+    .modal-card {
+      width: min(92vw, 440px); text-align: center;
+      background: linear-gradient(180deg, var(--bg-card-2), var(--bg-card));
+      border: 1px solid var(--border-bright); border-radius: 18px;
+      padding: 32px 28px 28px;
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.85);
+      animation: cardIn .35s cubic-bezier(.2, 1.4, .4, 1);
+    }
+    .modal-card h2 { color: var(--amber-soft); margin-bottom: 8px; }
+    .modal-card p { color: var(--text-dim); font-size: 0.93rem; }
+    .modal-stars { font-size: 2.1rem; letter-spacing: 6px; color: var(--amber); margin: 12px 0 2px; text-shadow: 0 0 18px var(--amber-glow); animation: starPop .5s cubic-bezier(.2, 1.6, .4, 1); }
+    .modal-stats { color: var(--text-faint); font-size: 0.85rem; font-family: var(--mono); margin-bottom: 18px; }
+    .modal-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .intro-card { max-width: 480px; }
+    .intro-card .keys { color: var(--acc); font-family: var(--mono); font-size: 0.85rem; margin: 10px 0 4px; }
+    .intro-card ul { text-align: left; color: var(--text-dim); font-size: 0.92rem; padding-left: 20px; margin: 10px auto 16px; max-width: 34ch; }
+
+    @keyframes orbPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+    @keyframes hazardFlicker { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 0.85; } }
+    @keyframes teleSpin { to { transform: rotate(360deg); } }
+    @keyframes doorPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+    @keyframes zap { 0% { filter: brightness(2); transform: scale(1.3); } 100% { filter: none; transform: scale(1); } }
+    @keyframes sparkFly { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.6); } }
+    @keyframes burstRing { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); } }
+    @keyframes cardIn { from { opacity: 0; transform: scale(0.85) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes starPop { 0% { transform: scale(0); } 70% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="/">
+      <img class="logo-mark" src="/img/logo.svg" alt="MUNDA logo">
+      <span class="brand-name">MUN<em>DA</em></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/technology">Technology</a></li>
+        <li><a href="/company">Company</a></li>
+        <li><a href="/sales">Sales</a></li>
+        <li><a href="/career">Career</a></li>
+        <li><a href="/game" class="active">Game</a></li>
+        <li><a href="/contact" class="nav-cta">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="padding: 64px 0 44px;">
+    <div class="container">
+      <span class="kicker">Game · adventure</span>
+      <h1>Light the <span class="hl">Light Works.</span></h1>
+      <p class="lead" style="max-width: 44em;">
+        The MUNDA Light Works facility has gone dark. You are the new lighting engineer —
+        explore five zones, collect light orbs, flip switches, dodge dark zones and
+        light up the Audi Showroom.
+      </p>
+    </div>
+  </section>
+
+  <section class="section game-section">
+    <div class="container">
+
+      <!-- ============ HUB ============ -->
+      <div id="game-hub">
+        <div class="hub-head">
+          <span class="kicker">Mission briefing</span>
+          <h2>Choose a zone</h2>
+          <p class="lead hub-lead" id="hub-status"></p>
+          <div class="hub-meta">
+            <span class="lumen-pill">⚡ Lumen <b id="lumen-total">0</b></span>
+            <button id="sound-toggle" class="btn btn-ghost btn-icon" aria-label="Toggle sound">🔊</button>
+            <button id="reset-progress" class="btn btn-ghost btn-icon">Reset</button>
+          </div>
+        </div>
+        <div id="zone-map" class="zone-map" role="list" aria-label="Zones of the MUNDA Light Works"></div>
+      </div>
+
+      <!-- ============ ZONE ============ -->
+      <div id="game-zone" hidden>
+        <div class="zone-banner acc-amber" id="zone-banner">
+          <div>
+            <span class="ztag" id="zone-name">Zone 1</span>
+            <span class="ztag" id="zone-tag"></span>
+            <h3 id="zone-title">Fibre Fields</h3>
+            <p id="zone-desc"></p>
+          </div>
+        </div>
+
+        <div class="game-hud">
+          <div>
+            <div class="mission-line" id="mission-text">Collect orbs</div>
+            <div class="portal-status" id="portal-status">Portal inactive</div>
+          </div>
+          <div class="stat" style="display: flex; gap: 12px;">
+            <span>💡 <b id="hud-orbs">0</b></span>
+            <span>👣 <b id="hud-moves">0</b></span>
+            <span>⏱ <b id="hud-time">0s</b></span>
+          </div>
+        </div>
+
+        <div class="board-wrap">
+          <div id="zone-board">
+            <div id="zone-grid"></div>
+            <div id="zone-overlays"></div>
+          </div>
+          <div class="game-hint" id="game-hint"></div>
+          <div class="game-controls">
+            <button id="zone-restart" class="btn btn-ghost">↺ Restart</button>
+            <button id="zone-exit" class="btn btn-ghost">← All zones</button>
+          </div>
+          <div class="dpad" aria-label="Move controls">
+            <span></span><button id="dpad-up" aria-label="Move up">▲</button><span></span>
+            <button id="dpad-left" aria-label="Move left">◀</button><span class="dpad-none"></span><button id="dpad-right" aria-label="Move right">▶</button>
+            <span></span><button id="dpad-down" aria-label="Move down">▼</button><span></span>
+          </div>
+          <p class="game-help" style="text-align:center; color: var(--text-faint); font-size: 0.85rem; max-width: 52ch; margin: 10px auto 0;">
+            Arrow keys / WASD to move (or use the pad). Collect <span style="color: var(--amber)">light orbs</span>,
+            flip <span style="color: var(--cyan)">switches</span>, avoid <span style="color: var(--text-dim)">dark zones</span>,
+            light the <span style="color: var(--green)">nodes</span>. Esc = hub · R = restart.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<!-- zone complete modal -->
+<div id="game-modal" class="game-modal" hidden>
+  <div class="modal-card">
+    <h2 id="game-modal-title">Zone complete!</h2>
+    <div class="modal-stars" id="game-modal-stars">★★★</div>
+    <div class="modal-stats" id="game-modal-stats"></div>
+    <div class="modal-actions">
+      <button id="game-next" class="btn btn-primary"><span id="game-next-label">Next zone →</span></button>
+      <button id="game-replay" class="btn btn-ghost">Replay</button>
+    </div>
+  </div>
+</div>
+
+<!-- first-time intro modal -->
+<div id="intro-modal" class="game-modal" hidden>
+  <div class="modal-card intro-card">
+    <h2>Welcome, Lighting Engineer</h2>
+    <p>The Light Works facility has gone dark. Restore the light, zone by zone.</p>
+    <ul>
+      <li>Move with <b>arrow keys / WASD</b> (or the on-screen pad)</li>
+      <li>Collect <b style="color: var(--amber)">light orbs</b> — they power the exit portal</li>
+      <li>Colour orbs open <b style="color: var(--cyan)">colour gates</b> of the same colour</li>
+      <li>Flip <b style="color: var(--green)">switches</b> to open doors</li>
+      <li>Avoid <b>dark zones</b> — they zap you back to the start</li>
+    </ul>
+    <div class="modal-actions">
+      <button id="intro-start" class="btn btn-primary">Let's go →</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="/">
+          <img class="logo-mark" src="/img/logo.svg" alt="MUNDA logo">
+          <span class="brand-name">MUN<em>DA</em></span>
+        </a>
+        <p>Textile lighting systems — LED light, woven into technical textiles. A joint venture of AUNDE and MENTOR, Erkrath, Germany.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Site</h4>
+        <ul>
+          <li><a href="/technology">Technology</a></li>
+          <li><a href="/company">Company</a></li>
+          <li><a href="/sales">Sales</a></li>
+          <li><a href="/career">Career</a></li>
+          <li><a href="/game">Game</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:welcome@munda.tech">welcome@munda.tech</a></li>
+          <li><a href="tel:+492****3730">+49 211 9507373-0</a></li>
+          <li><a href="https://www.munda.tech/en/" target="_blank" rel="noopener">munda.tech ↗</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year>2026</span> MUNDA Textile Lichtsysteme GmbH · Demonstration website</span>
+      <span>Heinrich-Hertz-Straße 7 · D-40699 Erkrath · Germany</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/game.js"></script>
+</body>
+</html>

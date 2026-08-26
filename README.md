@@ -34,6 +34,7 @@ npm start          # → http://localhost:3000
 | `/company`       | The AUNDE × MENTOR joint venture           |
 | `/sales`         | Sales contacts (AUNDE / MENTOR)            |
 | `/career`        | Jobs & application info                    |
+| `/game`          | **"Light Works"** adventure game — explore 5 zones of the Light Works facility: collect light orbs, flip switches, dodge dark zones, light the nodes (keyboard + touch) |
 | `/contact`       | Contact form (wired to the API)            |
 | `/api/health`    | Health check                               |
 | `/api/contact`   | `POST` a contact message (validated, stored to JSON) |
