@@ -210,6 +210,7 @@
       colors: new Set(), switches: 0, nodesLit: 0, pickups: 0,
       collectedOrbs: new Set(), litNodes: new Set(),
       startTime: 0, elapsed: 0, moves: 0, busy: false, timer: null,
+      walkQueue: [], walkTimer: null,
     };
 
     /* ---------- sound (tiny WebAudio synth, no assets) ---------- */
@@ -292,8 +293,8 @@
       const z = ZONES[state.zone];
       const wrap = $('#zone-board');
       const avail = Math.min(wrap.clientWidth || 620, 680);
-      cellPx = Math.max(22, Math.floor(avail / z.W));
-      if (cellPx * z.H > 560) cellPx = Math.max(20, Math.floor(560 / z.H));
+      cellPx = Math.min(46, Math.max(22, Math.floor(avail / z.W)));
+      if (cellPx * z.H > 540) cellPx = Math.max(20, Math.floor(540 / z.H));
       wrap.style.width = cellPx * z.W + 'px';
       wrap.style.height = cellPx * z.H + 'px';
 
@@ -386,6 +387,73 @@
 
     const MOVES = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
     const KEYMAP = { w: 'ArrowUp', W: 'ArrowUp', s: 'ArrowDown', S: 'ArrowDown', a: 'ArrowLeft', A: 'ArrowLeft', d: 'ArrowRight', D: 'ArrowRight' };
+
+    /** BFS route from `from` to `to` over currently-walkable cells (walls,
+     *  locked gates/doors, dark zones and teleporters excluded). Returns the
+     *  list of cells to step onto (excluding `from`), or null if unreachable. */
+    function bfsPath(z, from, to) {
+      const W = z.W, H = z.H;
+      const start = from.r * W + from.c, goal = to.r * W + to.c;
+      if (start === goal) return [];
+      const prev = new Map();
+      const seen = new Set([start]);
+      const q = [from];
+      let head = 0;
+      while (head < q.length) {
+        const cur = q[head++];
+        const ci = cur.r * W + cur.c;
+        if (ci === goal) break;
+        for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+          const nr = cur.r + dr, nc = cur.c + dc;
+          if (nr < 0 || nr >= H || nc < 0 || nc >= W) continue;
+          const ni = nr * W + nc;
+          if (seen.has(ni)) continue;
+          if (z.wallSet.has(ni)) continue;
+          if (z.hazards.some((h) => h.r === nr && h.c === nc)) continue;
+          const gate = z.gates.find((g) => g.r === nr && g.c === nc);
+          if (gate && !state.colors.has(gate.color)) continue;
+          if (z.doors.some((d) => d.r === nr && d.c === nc) && state.switches === 0) continue;
+          if (z.teleTo.has(ni)) continue; // don't route through teleporters
+          seen.add(ni);
+          prev.set(ni, { r: cur.r, c: cur.c });
+          q.push({ r: nr, c: nc });
+        }
+      }
+      if (!prev.has(goal)) return null;
+      const path = [];
+      let cur = { r: Math.floor(goal / W), c: goal % W };
+      while (!(cur.r === from.r && cur.c === from.c)) {
+        path.push(cur);
+        cur = prev.get(cur.r * W + cur.c);
+      }
+      return path.reverse();
+    }
+
+    function stopWalking() {
+      if (state.walkTimer) { clearInterval(state.walkTimer); state.walkTimer = null; }
+      state.walkQueue = [];
+    }
+
+    function walkTo(r, c) {
+      const z = ZONES[state.zone];
+      if (r === state.pos.r && c === state.pos.c) return;
+      const path = bfsPath(z, state.pos, { r, c });
+      if (!path) { hint('No path there — blocked!'); sfx.blocked(); return; }
+      stopWalking();
+      state.walkQueue = path;
+      state.walkTimer = setInterval(() => {
+        if (!state.walkQueue.length || state.view !== 'zone' || state.busy) {
+          if (!state.walkQueue.length || state.view !== 'zone') stopWalking();
+          return;
+        }
+        const next = state.walkQueue.shift();
+        const dr = next.r - state.pos.r, dc = next.c - state.pos.c;
+        const dir = dr === -1 ? 'ArrowUp' : dr === 1 ? 'ArrowDown' : dc === -1 ? 'ArrowLeft' : 'ArrowRight';
+        const before = { r: state.pos.r, c: state.pos.c };
+        tryMove(dir);
+        if (state.pos.r === before.r && state.pos.c === before.c) stopWalking(); // stuck
+      }, 110);
+    }
 
     function tryMove(dir) {
       if (state.busy || state.view !== 'zone') return;
@@ -527,6 +595,7 @@
       state.orbs = 0; state.colors = new Set(); state.switches = 0;
       state.nodesLit = 0; state.pickups = 0; state.moves = 0; state.busy = false;
       state.collectedOrbs = new Set(); state.litNodes = new Set();
+      stopWalking();
       state.startTime = Date.now();
       $('#game-hub').hidden = true;
       $('#game-zone').hidden = false;
@@ -595,8 +664,8 @@
       $('#dpad-right').addEventListener('click', () => tryMove('ArrowRight'));
       $('#zone-restart').addEventListener('click', () => enterZone(state.zone));
       $('#zone-exit').addEventListener('click', showHub);
-      // clicking the board moves one step toward the clicked tile (mouse-only
-      // movement — handy when a browser/webview grabs the arrow keys)
+      // click a tile on the board → the player WALKS there on its own
+      // (mouse-only movement; browsers/webviews often grab the arrow keys)
       const board = $('#zone-board');
       if (board) {
         board.addEventListener('click', (e) => {
@@ -605,12 +674,7 @@
           const rect = board.getBoundingClientRect();
           const c = Math.floor((e.clientX - rect.left) / cellPx);
           const r = Math.floor((e.clientY - rect.top) / cellPx);
-          const dr = r - state.pos.r, dc = c - state.pos.c;
-          const dir = dr === -1 && dc === 0 ? 'ArrowUp'
-            : dr === 1 && dc === 0 ? 'ArrowDown'
-            : dc === -1 && dr === 0 ? 'ArrowLeft'
-            : dc === 1 && dr === 0 ? 'ArrowRight' : null;
-          if (dir) tryMove(dir);
+          walkTo(r, c);
         });
       }
       $('#game-next').addEventListener('click', () => {
