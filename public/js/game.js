@@ -392,9 +392,9 @@
       const z = ZONES[state.zone];
       const [dr, dc] = MOVES[dir];
       const nr = state.pos.r + dr, nc = state.pos.c + dc;
-      if (nr < 0 || nr >= z.H || nc < 0 || nc >= z.W) { sfx.blocked(); return; }
+      if (nr < 0 || nr >= z.H || nc < 0 || nc >= z.W) { hint('Edge of the map!'); sfx.blocked(); return; }
       const ni = idx(z, nr, nc);
-      if (z.wallSet.has(ni)) { sfx.blocked(); return; }
+      if (z.wallSet.has(ni)) { hint('Wall — try another direction!'); sfx.blocked(); return; }
       // gates need their colour orb
       const gate = z.gates.find((g) => g.r === nr && g.c === nc);
       if (gate && !state.colors.has(gate.color)) { hint(`Need a ${gate.color} orb to pass!`); sfx.blocked(); return; }
@@ -595,9 +595,24 @@
       $('#dpad-right').addEventListener('click', () => tryMove('ArrowRight'));
       $('#zone-restart').addEventListener('click', () => enterZone(state.zone));
       $('#zone-exit').addEventListener('click', showHub);
-      // clicking the board (re)focuses it so keyboard movement keeps working
+      // clicking the board moves one step toward the clicked tile (mouse-only
+      // movement — handy when a browser/webview grabs the arrow keys)
       const board = $('#zone-board');
-      if (board) board.addEventListener('click', () => board.focus());
+      if (board) {
+        board.addEventListener('click', (e) => {
+          board.focus();
+          if (state.view !== 'zone') return;
+          const rect = board.getBoundingClientRect();
+          const c = Math.floor((e.clientX - rect.left) / cellPx);
+          const r = Math.floor((e.clientY - rect.top) / cellPx);
+          const dr = r - state.pos.r, dc = c - state.pos.c;
+          const dir = dr === -1 && dc === 0 ? 'ArrowUp'
+            : dr === 1 && dc === 0 ? 'ArrowDown'
+            : dc === -1 && dr === 0 ? 'ArrowLeft'
+            : dc === 1 && dr === 0 ? 'ArrowRight' : null;
+          if (dir) tryMove(dir);
+        });
+      }
       $('#game-next').addEventListener('click', () => {
         if (state.zone < ZONES.length - 1) enterZone(state.zone + 1); else showHub();
       });
