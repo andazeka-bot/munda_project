@@ -83,6 +83,7 @@
     .game-hud .stat { color: var(--text-dim); font-size: 0.88rem; font-family: var(--mono); }
     .game-hud .stat b { color: var(--text); }
     .mission-line { font-size: 0.92rem; color: var(--text); font-weight: 600; }
+    .goal-line { font-size: 0.8rem; color: var(--acc); font-family: var(--mono); margin-top: 2px; }
     .portal-status { display: inline-block; margin-top: 3px; font-size: 0.78rem; color: var(--text-faint); font-family: var(--mono); transition: color .3s ease; }
     .portal-status.on { color: var(--acc); text-shadow: 0 0 10px var(--acc); animation: doorPulse 1.4s ease-in-out infinite; }
 
@@ -288,6 +289,7 @@
         <div class="game-hud">
           <div>
             <div class="mission-line" id="mission-text">Collect orbs</div>
+            <div class="goal-line" id="goal-text"></div>
             <div class="portal-status" id="portal-status">Portal inactive</div>
           </div>
           <div class="stat" style="display: flex; gap: 12px;">
@@ -298,7 +300,7 @@
         </div>
 
         <div class="board-wrap">
-          <div id="zone-board">
+          <div id="zone-board" tabindex="0" aria-label="Game board — arrow keys to move">
             <div id="zone-grid"></div>
             <div id="zone-overlays"></div>
           </div>
@@ -343,8 +345,8 @@
     <h2>Welcome, Lighting Engineer</h2>
     <p>The Light Works facility has gone dark. Restore the light, zone by zone.</p>
     <ul>
-      <li>Move with <b>arrow keys / WASD</b> (or the on-screen pad)</li>
-      <li>Collect <b style="color: var(--amber)">light orbs</b> — they power the exit portal</li>
+      <li><b>Your goal:</b> collect every light orb — then the exit portal (E) lights up. Walk into it to finish!</li>
+      <li>Move with <b>arrow keys / WASD</b> — click the board first if keys don't respond (or use the pad below)</li>
       <li>Colour orbs open <b style="color: var(--cyan)">colour gates</b> of the same colour</li>
       <li>Flip <b style="color: var(--green)">switches</b> to open doors</li>
       <li>Avoid <b>dark zones</b> — they zap you back to the start</li>

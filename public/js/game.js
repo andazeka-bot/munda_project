@@ -370,8 +370,10 @@
       });
       if (z.mission === 'light') {
         $('#mission-text').textContent = `Light the nodes: ${state.litNodes.size}/${z.nodes.length}`;
+        $('#goal-text').textContent = `🎯 Goal: light ${z.nodes.length} nodes, then reach the portal`;
       } else {
         $('#mission-text').textContent = `Collect orbs: ${Math.min(state.pickups, z.orbs.length)}/${z.orbs.length}`;
+        $('#goal-text').textContent = `🎯 Goal: collect ${z.orbs.length} orbs, then reach the portal`;
       }
       $('#portal-status').textContent = portal ? 'Portal active — reach it!' : 'Portal inactive — complete the mission';
       $('#portal-status').className = 'portal-status ' + (portal ? 'on' : '');
@@ -536,6 +538,9 @@
         state.elapsed = (Date.now() - state.startTime) / 1000;
         $('#hud-time').textContent = Math.floor(state.elapsed) + 's';
       }, 250);
+      // focus the board so arrow keys / WASD work immediately
+      const board = $('#zone-board');
+      if (board && board.focus) board.focus({ preventScroll: true });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       if (i === 0 && !progress.seenIntro) { progress.seenIntro = true; saveProgress(); showIntro(); }
     }
@@ -590,6 +595,9 @@
       $('#dpad-right').addEventListener('click', () => tryMove('ArrowRight'));
       $('#zone-restart').addEventListener('click', () => enterZone(state.zone));
       $('#zone-exit').addEventListener('click', showHub);
+      // clicking the board (re)focuses it so keyboard movement keeps working
+      const board = $('#zone-board');
+      if (board) board.addEventListener('click', () => board.focus());
       $('#game-next').addEventListener('click', () => {
         if (state.zone < ZONES.length - 1) enterZone(state.zone + 1); else showHub();
       });
