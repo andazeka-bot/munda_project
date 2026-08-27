@@ -8,6 +8,7 @@
  *   GET  /company     → company page
  *   GET  /sales       → sales page
  *   GET  /career      → career page
+ *   GET  /game        → Spot the Difference mini-game
  *   GET  /contact     → contact page
  *   GET  /api/health  → service health + uptime
  *   GET  /api/messages→ list stored contact messages (for the site owner)
